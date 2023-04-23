@@ -1,4 +1,4 @@
-# CS513-Final-Project-Patient-Surival
+# Stevens Institute of Technology CS513-Final-Project-Patient-Surival
 Patient Survival After One Year of Treatment
 
 About Dataset
