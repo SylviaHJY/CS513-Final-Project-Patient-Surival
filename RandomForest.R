@@ -52,6 +52,15 @@ conf_matrix <- table(actual=test$Survived_1_year, Prediction)
 accuracy <- function (x) {sum(diag(x) / (sum(rowSums(x))) * 100);};
 accuracy(conf_matrix)
 
+# Calculate precision (positive predictive value)
+precision <- conf_matrix[2, 2] / (conf_matrix[2, 2] + conf_matrix[1, 2])
+
+# Calculate recall (sensitivity)
+recall <- conf_matrix[2, 2] / (conf_matrix[2, 2] + conf_matrix[2, 1])
+
+# Calculate F1 score
+F1_score <- 2 * ((precision * recall) / (precision + recall))
+
 #error rate
 wrong<- (test$Survived_1_year!=Prediction)
 errorRate<-sum(wrong)/length(wrong)
