@@ -4,6 +4,15 @@ library("FactoMineR")
 library("factoextra")
 library("corrplot")
 library(RColorBrewer)
+library(xgboost)
+library(readr)
+library(stringr)
+library(caret)
+library(MLmetrics)
+library(car)
+library(e1071)
+library(rpart)
+library(pROC)
 ?PCA
 
 #Load the data
@@ -14,7 +23,8 @@ summary(mydata)
 
 # delete the rows with missing value
 pharma_data <- na.omit(mydata)
-
+pharma_data$Patient_Smoker <- ifelse(pharma_data$Patient_Smoker == "YES", 1, 0)
+pharma_data$Patient_Rural_Urban <- ifelse(pharma_data$Patient_Rural_Urban == "URBAN", 1, 0)
 #  Pre-processing, convert categorical columns to numeric for pharma_data
 pharma_data <- pharma_data[,-3] # Eliminate the 3rd column for identifier
 pharma_data <- pharma_data[,-8]
@@ -53,14 +63,13 @@ corrplot(cor.mat, type="upper", order="hclust",
          tl.col="black", tl.srt=45)
 # create test and training dataset
 # use 30% test 70% training data
-#set.seed(100)
+set.seed(100)
 data_val <- sort(sample(nrow(pharma_data), size = as.integer(.70 * nrow(pharma_data))))
 training <- pharma_data[data_val,]
 View(training)
 test <- pharma_data[-data_val,]
 View(test)
 
-library(e1071)
 ## svm
 svm.model <- svm( Survived_1_year~ ., data =training  )
 svm.pred <- predict(svm.model,  test )
@@ -71,33 +80,18 @@ rate<-sum(SVM_wrong)/length(SVM_wrong)
 conf_matrix<-table(svm.pred,test$Survived_1_year)
 accuracy <- function(x){sum(diag(x)/(sum(colSums(x))))}
 accuracy(conf_matrix)
-library(rpart)
+
 cat('SVM model case:\n')
 w <- t(svm.model$coefs) %*% svm.model$SV                 # weight vectors
 w <- apply(w, 2, function(v){sqrt(sum(v^2))})  # weight
 w <- sort(w, decreasing = T)
 print(w)
 barplot(w)
-library(MLmetrics)
+##ROC 
+roc_score=roc(test[,15], svm.pred) #AUC score
+plot(roc_score ,main ="ROC curve -- SVM ")
 F1_Score(svm.pred,test$Survived_1_year)
-
-
-model <- xgb.dump(bst, with_stats = T)
-model[1:10] #This statement prints top 10 nodes of the model
-# 获得特征的真实名称
-names <- dimnames(data.matrix(training[,-15]))[[2]]
-# 计算特征重要性矩阵
-importance_matrix <- xgb.importance(names, model =bst)
-
-# 制图
-xgb.plot.importance(importance_matrix[1:10,])
-# 在最后一步如果失效可能是因为版本问题,你可以尝试:
-barplot(importance_matrix[,1])
-library(xgboost)
-library(readr)
-library(stringr)
-library(caret)
-library(car)
+## XGBOOST
 bst <- xgboost(data = as.matrix(training[-15]), 
                label =training$Survived_1_year,
                max.depth = 2, eta = 1, 
@@ -113,7 +107,14 @@ conf_matrix<-table(pred,test$Survived_1_year)
 accuracy <- function(x){sum(diag(x)/(sum(colSums(x))))}
 accuracy(conf_matrix)
 
-##ROC   曲线绘制可以搞一下，显得很牛
-library(pROC)
-roc_score=roc(test[,15], svm.pred) #AUC score
-plot(roc_score ,main ="ROC curve -- SVM ")
+model <- xgb.dump(bst, with_stats = T)
+model[1:10] #This statement prints top 10 nodes of the model
+# names of attributes
+names <- dimnames(data.matrix(training[,-15]))[[2]]
+# ca
+importance_matrix <- xgb.importance(names, model =bst)
+
+# plot
+xgb.plot.importance(importance_matrix[1:10,])
+
+

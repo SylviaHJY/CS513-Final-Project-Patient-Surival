@@ -4,19 +4,22 @@
 #  Name       : Wencheng Qiu
 #  CWID			  : 20011469
 
-
 rm(list=ls())
 
+# Install.packages("Metrics")
 library("FactoMineR")
 library("factoextra")
 library("corrplot")
-install.packages("Metrics")
-library(Metrics)
+library(MLmetrics)
 
 
-# read the csv file
-setwd("~/Desktop")
-dataset <- read.csv("Patient_Survive.csv", header = TRUE, stringsAsFactors = FALSE, na.strings = "?")
+# Read the csv file
+# setwd("~/Desktop")
+# dataset <- read.csv("Patient_Survive.csv", header = TRUE, stringsAsFactors = FALSE, na.strings = "?")
+filename<-file.choose()
+dataset <-read.csv(filename, na.strings=c("?"))
+View(dataset)
+
 # delete the rows with missing value
 pharma_data <- na.omit(dataset)
 
@@ -38,10 +41,10 @@ pharma_data$Patient_Body_Mass_Index <- scale(pharma_data$Patient_Body_Mass_Index
 pharma_data$Number_of_prev_cond <- scale(pharma_data$Number_of_prev_cond)
 View(pharma_data)
 
-#Correlation plot
+# Correlation plot
 cor.mat <- round(cor(pharma_data),2)
 
-#PCA
+# PCA
 res.pca <- PCA(pharma_data, graph = TRUE)
 var <- get_pca_var(res.pca)
 corrplot(var$cos2, is.corr=FALSE)
@@ -85,7 +88,7 @@ par(mar=c(5,4,4,2))
 plot(k_values, accuracy_values, type = "b", xlab = "k", ylab = "Accuracy", main = "Accuracy of KNN models")
 
 
-################################################
+################################################################
 
 # TEST 3: CART Method
 # install.packages("ggplot2")
