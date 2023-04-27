@@ -15,9 +15,6 @@ View(pharma_data)
 
 # delete the rows with missing value
 pharma_data <- na.omit(pharma_data)
-pharma_data <- pharma_data[,-3] # Eliminate the 3rd column for identifier
-pharma_data <- pharma_data[,-8]
-pharma_data <- pharma_data[,-14]
 pharma_data<- pharma_data[,c(2,4,5,6,7,17,18)]
 View(pharma_data)
 # Convert Survived_1_year to a factor
